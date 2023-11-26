@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title th:remove="all">Новая заявка</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    </head>
+    <body>
+        <p>Your hobbies are:</p>
+        <ul>
+            <li>Название заказчика:</li>
+            <li>ФИО обратившегося:</li>
+            <li>Телефон для связи:</li>
+            <li>ФИО обратившегося:</li>
+            <li>E-mail для связи:</li>
+            <li>Название кластера:</li>
+            <li>Приоритет инцидента:</li>
+            <li>Описание инцидента:</li>
+        </ul>
+        <p>
+        <p th:if="${fileAdded}">
+            Файл с зачвкой приложен к сообщению
+        </p>
+
+    </body>
+</html>
