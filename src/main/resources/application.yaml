@@ -4,19 +4,11 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: vadim.murov@glowbyteconsulting.com
-    password: eukqlfqjelxfofxa
+    username: ${SENDER_USERNAME}
+    password: ${SENDER_PASSWORD}
     properties:
       mail:
-        transport:
-          protocol: smtp
-#        debug: true
         smtp:
-          ssl:
-            trust: smtp.gmail.com
-          socketFactory:
-            class: javax.net.ssl.SSLSocketFactory
-          auth: true
           starttls:
             required: true
             enable: true
