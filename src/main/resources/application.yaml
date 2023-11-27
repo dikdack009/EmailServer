@@ -5,7 +5,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: vadim.murov@glowbyteconsulting.com
-    password: eukqlfqjelxfofxa
+    password: 
     properties:
       mail:
         transport:
