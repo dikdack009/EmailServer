@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class EmailInfo {
     private final Integer incidentNumber;
+    private final String customerName;
     private final String name;
     private final String email;
     private final String phoneNumber;

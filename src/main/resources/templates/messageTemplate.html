@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+    <head>
+        <title th:remove="all">Новая заявка</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    </head>
+    <body>
+        <p>Информация о заявке:</p>
+        <ul>
+            <li><b>Номер инцидента:</b> <span th:text="${incidentNumber}"></span></li>
+            <li><b>Название заказчика:</b> <span th:text="${customerName}"></span></li>
+            <li><b>ФИО обратившегося:</b>  <span th:text="${name}"></span></li>
+            <li><b>Телефон для связи:</b>  <span th:text="${phoneNumber}"></span></li>
+            <li><b>E-mail для связи:</b>  <span th:text="${email}"></span></li>
+            <li><b>Название кластера:</b>  <span th:text="${clusterName}"></span></li>
+            <li><b>Приоритет инцидента:</b>  <span th:text="${incidentPriority}"></span></li>
+            <li><b>Описание инцидента:</b>  "<span th:text="${incidentDescription}"></span>"</li>
+        </ul>
+        <p>
+        <p th:if="${fileAdded}">Файл с заявкой приложен к письму.</p>
+        <p>Данное письмо сформировано автоматически, просьба не отвечать на него.</p>
+    </body>
+</html>

@@ -1,11 +1,12 @@
 package glowbyte.bot.service;
 
 import glowbyte.bot.model.EmailInfo;
-import lombok.NoArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
@@ -20,8 +21,8 @@ public class EmailService {
     private final JavaMailSender emailSender;
     private final SpringTemplateEngine templateEngine;
     private final static String EMAIL_TO = "vadim.murov@glowbyteconsulting.com";
-    private final static String TEMPLATE_LOCATION = "html/messageTemplate.html";
-    private final static String APPLICATION_FILE_LOCATION = "src/main/resources/applicationFile.pdf";
+    private final static String TEMPLATE_LOCATION = "messageTemplate.html";
+    private final static String APPLICATION_FILE_LOCATION = "src/main/resources/";
 
     @Autowired
     public EmailService(JavaMailSender emailSender, SpringTemplateEngine templateEngine) {
@@ -29,18 +30,20 @@ public class EmailService {
         this.templateEngine = templateEngine;
     }
 
-    public void sendMessage(EmailInfo emailInfo, boolean fileAdded) throws MessagingException, IOException {
+    public void sendMessage(EmailInfo emailInfo, MultipartFile file) throws MessagingException, IOException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         Multipart mp = new MimeMultipart();
         MimeBodyPart htmlPart = new MimeBodyPart();
-        htmlPart.setContent(getEmilContent(emailInfo, fileAdded), "text/html; charset = utf-8");
+        htmlPart.setContent(getEmilContent(emailInfo, !file.isEmpty()), "text/html; charset = utf-8");
         mp.addBodyPart(htmlPart);
 
-        if (fileAdded) {
+        if (!file.isEmpty()) {
+            String fileName = file.getOriginalFilename();
             MimeBodyPart attachmentPart = new MimeBodyPart();
-            attachmentPart.attachFile(new File(APPLICATION_FILE_LOCATION));
+            attachmentPart.attachFile(new File(APPLICATION_FILE_LOCATION + fileName));
+//            helper.addAttachment(APPLICATION_FILE_NAME, new File(APPLICATION_FILE_LOCATION + fileName));
             mp.addBodyPart(attachmentPart);
         }
 
@@ -54,16 +57,16 @@ public class EmailService {
     }
 
     private String getEmilContent(EmailInfo emailInfo, boolean fileAdded) {
-//        Context context = new Context();
-//        context.setVariable("incidentNumber", emailInfo.getIncidentNumber());
-//        context.setVariable("name", emailInfo.getName());
-//        context.setVariable("email", emailInfo.getEmail());
-//        context.setVariable("phoneNumber", emailInfo.getPhoneNumber());
-//        context.setVariable("clusterName", emailInfo.getClusterName());
-//        context.setVariable("incidentPriority", emailInfo.getIncidentPriority());
-//        context.setVariable("incidentDescription", emailInfo.getIncidentDescription());
-//        context.setVariable("fileAdded", fileAdded);
-//        return templateEngine.process(TEMPLATE_LOCATION, context);
-        return "";
+        Context context = new Context();
+        context.setVariable("incidentNumber", emailInfo.getIncidentNumber());
+        context.setVariable("customerName", emailInfo.getCustomerName());
+        context.setVariable("name", emailInfo.getName());
+        context.setVariable("email", emailInfo.getEmail());
+        context.setVariable("phoneNumber", emailInfo.getPhoneNumber());
+        context.setVariable("clusterName", emailInfo.getClusterName());
+        context.setVariable("incidentPriority", emailInfo.getIncidentPriority());
+        context.setVariable("incidentDescription", emailInfo.getIncidentDescription());
+        context.setVariable("fileAdded", fileAdded);
+        return templateEngine.process(TEMPLATE_LOCATION, context);
     }
 }
