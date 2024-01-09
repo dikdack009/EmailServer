@@ -1,15 +1,5 @@
 package glowbyte.bot.model;
 
-import lombok.Data;
-
-@Data
-public class EmailInfo {
-    private final Integer incidentNumber;
-    private final String customerName;
-    private final String name;
-    private final String email;
-    private final String phoneNumber;
-    private final String clusterName;
-    private final String incidentPriority;
-    private final String incidentDescription;
+public record EmailInfo(Integer incidentNumber, String customerName, String name, String email, String phoneNumber,
+                        String clusterName, String incidentPriority, String incidentDescription) {
 }

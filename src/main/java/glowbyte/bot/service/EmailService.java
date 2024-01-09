@@ -1,72 +1,83 @@
 package glowbyte.bot.service;
 
 import glowbyte.bot.model.EmailInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring5.SpringTemplateEngine;
 
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
-import javax.mail.internet.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+@Log4j2
 @Service
+@RequiredArgsConstructor
 public class EmailService {
     private final JavaMailSender emailSender;
-    private final SpringTemplateEngine templateEngine;
-    private final static String EMAIL_TO = "vadim.murov@glowbyteconsulting.com";
-    private final static String TEMPLATE_LOCATION = "messageTemplate.html";
-    private final static String APPLICATION_FILE_LOCATION = "src/main/resources/";
-
-    @Autowired
-    public EmailService(JavaMailSender emailSender, SpringTemplateEngine templateEngine) {
-        this.emailSender = emailSender;
-        this.templateEngine = templateEngine;
-    }
+    private final EmailContentFactory emailContentFactory;
+    @Value("${RECIPIENT_MAIL}")
+    private String RECIPIENT_MAIL;
 
     public void sendMessage(EmailInfo emailInfo, MultipartFile file) throws MessagingException, IOException {
-        MimeMessage message = emailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            Multipart multipart = new MimeMultipart();
+            helper.setTo(RECIPIENT_MAIL);
+            helper.setSubject("Новая заявка на сопровождение/инцидент");
 
-        Multipart mp = new MimeMultipart();
-        MimeBodyPart htmlPart = new MimeBodyPart();
-        htmlPart.setContent(getEmilContent(emailInfo, !file.isEmpty()), "text/html; charset = utf-8");
-        mp.addBodyPart(htmlPart);
+            setTextPart(multipart, emailInfo, file);
+            if (!file.isEmpty()) {
+                setFilePart(multipart, file);
+            }
+            message.setContent(multipart);
+            message.setFrom(new InternetAddress("no_reply@glowbyteconsulting.com", "NoReply-Ebobot"));
+            emailSender.send(message);
 
-        if (!file.isEmpty()) {
-            String fileName = file.getOriginalFilename();
-            MimeBodyPart attachmentPart = new MimeBodyPart();
-            attachmentPart.attachFile(new File(APPLICATION_FILE_LOCATION + fileName));
-//            helper.addAttachment(APPLICATION_FILE_NAME, new File(APPLICATION_FILE_LOCATION + fileName));
-            mp.addBodyPart(attachmentPart);
+        } catch (MessagingException | IOException exception) {
+            log.error("Возникла ошибка при отправке письма");
+            log.error(exception.getMessage());
+            throw exception;
+        } finally {
+            if (!file.isEmpty()) {
+                Files.delete(Paths.get(file.getOriginalFilename()));
+            }
         }
-
-        helper.setTo(EMAIL_TO);
-        helper.setSubject("Новая заявка на сопровождение/инцидент");
-        message.setContent(mp);
-        message.setFrom(new InternetAddress("no_reply@example.com", "NoReply-Ebobot"));
-        message.setSender(new NewsAddress("", "noreply@ebobot.ru"));
-
-        emailSender.send(message);
     }
 
-    private String getEmilContent(EmailInfo emailInfo, boolean fileAdded) {
-        Context context = new Context();
-        context.setVariable("incidentNumber", emailInfo.getIncidentNumber());
-        context.setVariable("customerName", emailInfo.getCustomerName());
-        context.setVariable("name", emailInfo.getName());
-        context.setVariable("email", emailInfo.getEmail());
-        context.setVariable("phoneNumber", emailInfo.getPhoneNumber());
-        context.setVariable("clusterName", emailInfo.getClusterName());
-        context.setVariable("incidentPriority", emailInfo.getIncidentPriority());
-        context.setVariable("incidentDescription", emailInfo.getIncidentDescription());
-        context.setVariable("fileAdded", fileAdded);
-        return templateEngine.process(TEMPLATE_LOCATION, context);
+    private void setTextPart(Multipart multipart, EmailInfo emailInfo, MultipartFile file) throws MessagingException {
+        try {
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setContent(emailContentFactory.getEmilContent(emailInfo, !file.isEmpty()), "text/html; charset = utf-8");
+            multipart.addBodyPart(htmlPart);
+        } catch (MessagingException exception) {
+            log.error("Возникла ошибка при формировании текста письма");
+            throw exception;
+        }
+    }
+
+    private void setFilePart(Multipart multipart, MultipartFile file) throws MessagingException, IOException {
+        try {
+            Path path = Paths.get(file.getOriginalFilename());
+            File temp = Files.write(path, file.getBytes()).toFile();
+            MimeBodyPart attachmentPart = new MimeBodyPart();
+            attachmentPart.attachFile(temp);
+            multipart.addBodyPart(attachmentPart);
+        } catch (MessagingException | IOException exception) {
+            log.error("Возникла ошибка при добавлении файла к письму");
+            throw exception;
+        }
     }
 }
