@@ -39,3 +39,7 @@ build/
 
 ### sensitive data ###
 env.env
+
+
+### docker ###
+DockerFile

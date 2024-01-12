@@ -43,7 +43,7 @@ public class EmailService {
                 setFilePart(multipart, file);
             }
             message.setContent(multipart);
-            message.setFrom(new InternetAddress("no_reply@glowbyteconsulting.com", "NoReply-Ebobot"));
+            message.setFrom(new InternetAddress("no_reply@glowbyteconsulting.com", "NoReply-requestBot"));
             emailSender.send(message);
 
         } catch (MessagingException | IOException exception) {
